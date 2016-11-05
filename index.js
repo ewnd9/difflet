@@ -70,12 +70,18 @@ function difflet (opts, prev, next) {
     
     var levels = 0;
     function set (type) {
-        if (levels === 0) opts.start(type, stream);
+        if (levels === 0) {
+          opts.stop('syntax', stream);
+          opts.start(type, stream);
+        }
         levels ++;
     }
     
     function unset (type) {
-        if (--levels === 0) opts.stop(type, stream);
+        if (--levels === 0) {
+          opts.stop(type, stream);
+          opts.start('syntax', stream);
+        }
     }
     
     function stringifier (insertable, node, opts) {
@@ -387,11 +393,16 @@ function difflet (opts, prev, next) {
         }
     }
     
+    opts.start('syntax', stream);
+
     if (opts.stream) {
         traverse(next).forEach(stringify);
+        opts.stop('syntax', stream);
     }
     else process.nextTick(function () {
         traverse(next).forEach(stringify);
+        opts.stop('syntax', stream);
+
         stream.emit('end');
     });
     
